@@ -54,7 +54,7 @@ $articles = Article::search([
     
     // 当没有显式声明请求字段时，会自动拼接author_name
     // 支持无限层级关联 author.company.name, 默认值 $request->input('author_company_name')
-    'author.name' => '=, 
+    'author.name' => '=', 
 ])->get();
  
 ```
