@@ -1,0 +1,21 @@
+{
+    "name": "wyzheng/search-model",
+    "license": "MIT",
+    "description": "扩展 laravel 的 ORM 使其具有简单的搜索功能。",
+    "keywords": ["library", "laravel", "search-model"],
+    "autoload": {
+        "psr-4": {
+            "Wyz\\SearchModel\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "wyzheng1997",
+            "email": "wyzheng1997@163.com"
+        }
+    ],
+    "require": {
+        "php": "^8.0",
+        "laravel/framework": "^8.0"
+    }
+}
