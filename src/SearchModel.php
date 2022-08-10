@@ -35,7 +35,7 @@ trait SearchModel
 
                 // 操作符号
                 $operator = is_array($val) ? $val[0] : $val; // =, >, >=, <,<=, like
-                if ('like' === $val) {
+                if ('like' === $operator) {
                     $search_input = "%{$search_input}%";
                 }
 
