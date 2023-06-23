@@ -3,49 +3,77 @@
 namespace Wyz\SearchModel;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
+/**
+ *  扩展laravel的ORM，使其拥有简单的搜索能力.
+ *
+ * @mixin Model
+ */
 trait SearchModel
 {
     /**
-     * 扩展laravel的ORM，使其拥有简单的搜索能力.
+     * 搜索.
+     *
+     * @param  array  $search 搜索条件
+     *                      1、['name' => 'like'] PS: name like '%xxx%'
+     *                      2、['category_id' => ['=', 'cate_id']]   PS: category_id = request('cate_id')
+     *                      3、['type' => fn($query, $input) => $query->where('type', $input)] PS: 自定义查询
+     *                      5、['admin.name' => 'like'] PS: whereHas('admin', fn($q) => $->where('name', 'like', '%xxx%')) PS: 关联查询
      */
-    public static function search(array $search = [], array $relations = []): Builder
+    public static function search(array $search = [], array|string $relations = []): Builder
     {
         return self::with($relations)->where(function ($query) use ($search) {
-            $ipt = request();
-            foreach ($search as $key => $val) {
-                $keysInfo = pathinfo($key);
-                $isWhereHas = isset($keysInfo['extension']);
-                if ($isWhereHas) { // whereHas 默认key PS: 'admin.name' 转换成 'admin_name'
-                    $key = str_replace('.', '_', $key);
-                }
-                $key = is_array($val) ? $val[1] : $key; // 自定义 key
+            // 获取请求参数
+            foreach ($search as $field => $operator) {
+                $fieldInfo = pathinfo($field);
+                $isWhereHas = isset($fieldInfo['extension']);
 
-                // 获取输入，空值跳过
-                $search_input = $ipt->input($key);
-                if (blank($search_input)) {
+                // whereHas 默认key PS: 'admin.name' 转换成 'admin_name'
+                if ($isWhereHas) {
+                    $field = str_replace('.', '_', $field);
+                }
+
+                // 自定义 key 优先级最高
+                $field = is_array($operator) ? $operator[1] : $field;
+
+                // 获取请求参数
+                $input = request($field);
+
+                // 跳过空值
+                if (blank($input)) {
                     continue;
                 }
 
-                // 自定义where查询
-                if ($val instanceof \Closure) {
-                    call_user_func($val, $query, $search_input);
+                // 自定义查询
+                if ($operator instanceof \Closure) {
+                    call_user_func($operator, $query, $input);
+
                     continue; // 进入下一个查询参数
                 }
 
                 // 操作符号
-                $operator = is_array($val) ? $val[0] : $val; // =, >, >=, <,<=, like
-                if ('like' === $operator) {
-                    $search_input = "%{$search_input}%";
+                $operator = is_array($operator) ? $operator[0] : $operator; // =, >, >=, <,<=, like, in, between
+                switch ($operator) {
+                    case 'in':
+                    case 'between':
+                        $method = 'where'.ucfirst($operator);
+                        $args = [is_array($input) ? $input : explode(',', $input)];
+                        break;
+                    case 'like':
+                        $method = 'where';
+                        $args = ['like', '%'.$input.'%'];
+                        break;
+                    default:
+                        $method = 'where';
+                        $args = [$operator, $input];
+                        break;
                 }
 
-                // 执行查询
                 if ($isWhereHas) {
-                    $query->whereHas($keysInfo['filename'], function ($q) use ($keysInfo, $operator, $search_input) {
-                        $q->where($keysInfo['extension'], $operator, $search_input);
-                    });
+                    $query->whereHas($fieldInfo['filename'], fn ($q) => $q->$method($fieldInfo['extension'], ...$args));
                 } else {
-                    $query->where($keysInfo['filename'], $operator, $search_input);
+                    $query->$method($fieldInfo['filename'], ...$args);
                 }
             }
         });
