@@ -1,42 +1,26 @@
-search-model使laravel ORM拥有快速处理请求搜索的能力。
+扩展laravel ORM，使其拥有快速处理请求查询的能力。
 ---
 ## 安装
 ```bash
-composer require wyzheng/search-model:dev-main
+composer require wyzheng/search-model
 ```
 
 ## 使用
-目前支持的搜索类型有：`like`, `=`, `>`, `<`, `>=`, `<`, `!=`。
-### 在模型加入SearchModel
-```php
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Wyz\SearchModel\SearchModel;
-
-class Article extends Model
-{
-    use HasFactory, SearchModel;
-    
-    public function author()
-    {
-        return $this->belongsTo(User::class);
-    }
-}
-```
+目前支持的查询类型有：`like`, `=`, `>`, `<`, `>=`, `<`, `!=`， `in`, `between`。
 
 ### 常规使用
 ```php
-// https://example.com/api/articles?title=test&category_id=5
-$articles = Article::search([
+// https://example.com/api/articles?title=test&category_id=5&created_at=2020-01-01,2021-01-02&user_id=1,2,3
+$articles = Article::search([,
     'title' => 'like', // 声明数据库title字段模糊搜索
     'category_id' => '=', // 声明数据库category_id字段精确搜索
+    'created_at' => 'between' // 支持get数组参数或开始和结束用逗号隔开的形式
+    'user_id' => 'in' // 支持get数组参数或逗号隔开的形式
 ])->get();
 ```
 
 ### 自定义请求参数
-当数据库字段和请求字段不同时，可以显式声明请求字段
+当数据库字段和请求字段不同时，可以显式声明请求字段名
 ```php
 // https://example.com/api/articles?text=test&cate_id=5
 $articles = Article::search([
@@ -46,7 +30,7 @@ $articles = Article::search([
 ```
 
 ### 跨表查询
-当搜索的字段关联表字段时，可以使用`search_model`方法
+当查询的字段是关联表的字段时，可以使用`.`的方式指定
 ```php
 // https://example.com/api/articles?title=test&author_name=jack
 $articles = Article::search([
@@ -60,14 +44,14 @@ $articles = Article::search([
 ```
 
 ### 自定义查询
-可以通过自定义查询方法来实现更复杂的查询，目前版本未实现`between`查询，这里就自定义实现一个`between`查询
+可以通过自定义查询方法来实现更复杂的查询
 ```php
-// https://example.com/api/articles?title=test&time=2020-01-01,2021-01-02
+// https://example.com/api/articles?title=test&type=1,2
 $articles = Article::search([
     'title' => ['like', 'text'], 
     
-    // $value = $request->input('time');
-    'time' => fn ($query, $value) => $query->whereBetween('created_at', explode(',', $value)),
+    // $value = $request->input('type');
+    'type' => fn ($query, $value) => $query->whereNotIn('type', explode(',', $value)),
 ])->get();
 ```
 
@@ -81,12 +65,14 @@ $articles = Article::search([
 }])->get();
 ```
 
-### 其他
-必须使用Model::search()这种方法来使用，search()前不能有其他ORM语句
+### 查询排序
+本扩展包还简单实现的查询排序功能`sort`
 ```php
-// 错误示例
-$articles = Article::orderBy('created_at')->search([...])->get();
-
-// 正确示例
-$articles = Article::search([...])->orderBy('created_at')->get();
+// https://example.com/api/articles?title=test&sort_by=asc(id),desc(author_level)
+$articles = Article::search([
+    'title' => ['like', 'text'], 
+])->sort(['id', 'author_level' => function($query, $direction) {
+    // $direction 取值 'asc' 或 'desc'
+    $query->orderByRaw('.......')
+}])->get();
 ```
