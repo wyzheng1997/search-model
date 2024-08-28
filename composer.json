@@ -5,7 +5,7 @@
     "keywords": ["library", "laravel", "search-model"],
     "autoload": {
         "psr-4": {
-            "Wyz\\SearchModel\\": "src/"
+            "Ugly\\SearchModel\\": "src/"
         }
     },
     "authors": [
@@ -16,6 +16,16 @@
     ],
     "require": {
         "php": "^8.0",
-        "laravel/framework": "^9.0"
+        "laravel/framework": "^9.0|^10.0|^11.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.10"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Ugly\\SearchModel\\ServiceProvider"
+            ]
+        }
     }
 }
