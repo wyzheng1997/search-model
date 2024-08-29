@@ -34,7 +34,7 @@ $articles = Article::search([
 ```php
 // https://example.com/api/articles?title=test&author_name=jack
 $articles = Article::search([
-    'title' => ['like', 'text'], 
+    'title' => 'like', 
     
     // 当没有显式声明请求字段时，会自动拼接author_name
     // 支持无限层级关联 author.company.name, 默认值 $request->input('author_company_name')
@@ -48,7 +48,7 @@ $articles = Article::search([
 ```php
 // https://example.com/api/articles?title=test&type=1,2
 $articles = Article::search([
-    'title' => ['like', 'text'], 
+    'title' => 'like', 
     
     // $value = $request->input('type');
     'type' => fn ($query, $value) => $query->whereNotIn('type', explode(',', $value)),
@@ -59,7 +59,7 @@ $articles = Article::search([
 search方法支持传入第二个参数(array)，和原with使用方法一致，可以指定预加载的字段
 ```php
 $articles = Article::search([
-    'title' => ['like', 'text'], 
+    'title' => 'like', 
 ], ['author' => function($author) {
     $author->select('id', 'name');
 }])->get();
@@ -70,7 +70,7 @@ $articles = Article::search([
 ```php
 // https://example.com/api/articles?title=test&sort_by=asc(id),desc(author_level)
 $articles = Article::search([
-    'title' => ['like', 'text'], 
+    'title' => 'like', 
 ])->sort(['id', 'author_level' => function($query, $direction) {
     // $direction 取值 'asc' 或 'desc'
     $query->orderByRaw('.......')
