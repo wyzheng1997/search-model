@@ -55,8 +55,8 @@ $articles = Article::search([
 ])->get();
 ```
 
-### 懒加载
-search方法支持传入第二个参数(array)，和原with使用方法一致，可以指定懒加载的字段
+### 预加载
+search方法支持传入第二个参数(array)，和原with使用方法一致，可以指定预加载的字段
 ```php
 $articles = Article::search([
     'title' => ['like', 'text'], 
