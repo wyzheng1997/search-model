@@ -54,7 +54,22 @@ $articles = Article::search([
     'type' => fn ($query, $value) => $query->whereNotIn('type', explode(',', $value)),
 ])->get();
 ```
+同时也支持自定义宏，此扩展包目前内置了一个处理时间区间查询的宏`whereBetweenDate`，可以直接使用
+```php
+// 自定义宏示例（已内置，可直接使用）
+Builder::macro('whereBetweenDate', function(string $filed, $input) {
+    [$startDate,$endDate] = is_array($input) ? $input : explode(',', $input);
+    return $this->whereDate($filed, '>=', $startDate)
+        ->whereDate($filed, '<=', $endDate);
+});
 
+// https://example.com/api/articles?created_at=2020-01-01,2021-01-02
+$articles = Article::search([
+    'created_at' => 'whereBetweenDate',
+    // 同样也支持显式声明请求字段名
+    // 'created_at' => ['whereBetweenDate', 'create_time']
+])
+```
 ### 预加载
 search方法支持传入第二个参数(array)，和原with使用方法一致，可以指定预加载的字段
 ```php
