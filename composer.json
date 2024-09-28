@@ -1,6 +1,8 @@
 {
     "name": "wyzheng/search-model",
     "license": "MIT",
+    "type": "library",
+    "version": "v1.0.1",
     "description": "扩展 laravel 的 ORM 使其具有简单的搜索功能。",
     "keywords": ["library", "laravel", "search-model"],
     "autoload": {
